@@ -6,16 +6,20 @@ public class GameManagerScript : MonoBehaviour
 {
     public static int w = 20;
     public static int h = 11;
-    public List<Vector2> snake = new List<Vector2>();
+    public static STATE state = STATE.Start;
+    public static List<Vector2> snake = new List<Vector2>();
     public Vector2 direction = -Vector2.right;
     public GameObject[,] grid = new GameObject[w, h];
     public GameObject node;
+    public enum STATE { Start, Gaming, GameOver };
+    public static int score = 0;
 
     private float time;
+    
 
     void Start()
     {
-        for (int i = 0; i < 16; ++i)
+        for (int i = 0; i < 9; ++i)
         {
             EatFood(new Vector2(4 + i, 2));
         }
@@ -23,6 +27,10 @@ public class GameManagerScript : MonoBehaviour
 
     void Update()
     {
+        if (state == STATE.GameOver)
+        {
+            return;
+        }
         if (Input.GetKeyDown(KeyCode.UpArrow) && direction != -Vector2.up)
         {
             direction = Vector2.up;
@@ -40,7 +48,7 @@ public class GameManagerScript : MonoBehaviour
             direction = Vector2.right;
         }
 
-        if (time > 0.1f)
+        if (time > 0.2f)
         {
             SnakeMove(direction);
             time = 0;
@@ -48,48 +56,62 @@ public class GameManagerScript : MonoBehaviour
         time += Time.deltaTime;
     }
 
-    void UpdateSnake()
-    {
-        foreach (Vector2 vec in snake)
-        {
-            int vecw = Mathf.RoundToInt(vec.x);
-            int vech = Mathf.RoundToInt(vec.y);
-            if (grid[vecw, vech] == null)
-                grid[vecw, vech] = (GameObject)Instantiate(node, new Vector3(vec.x, vec.y, 0f), Quaternion.identity);
-        }
-    }
-
+    // 增加贪吃蛇的长度
     private void EatFood(Vector2 vec)
     {
-        snake.Add(vec);
-        grid[Mathf.RoundToInt(vec.x), Mathf.RoundToInt(vec.y)] = (GameObject)Instantiate(node, new Vector3(vec.x, vec.y, 0f), Quaternion.identity);
+        snake.Insert(0, vec);
+        grid[Mathf.RoundToInt(snake[0].x), Mathf.RoundToInt(snake[0].y)] = (GameObject)Instantiate(node, new Vector3(vec.x, vec.y, 0f), Quaternion.identity);
     }
 
+    // 贪吃蛇移动
     private void SnakeMove(Vector2 dir)
     {
-        Vector2 first = snake[0];
-        snake.Insert(0, new Vector2(first.x+dir.x, first.y+dir.y));
-        if (CheckCollision())
+        if (CheckCollision(new Vector2(snake[0].x + dir.x, snake[0].y + dir.y)))
         {
             GameOver();
+            return;
         }
+        CheckFood(new Vector2(snake[0].x + dir.x, snake[0].y + dir.y));
+        snake.Insert(0, new Vector2(snake[0].x + dir.x, snake[0].y + dir.y));
         grid[Mathf.RoundToInt(snake[0].x), Mathf.RoundToInt(snake[0].y)] = (GameObject)Instantiate(node, new Vector3(snake[0].x, snake[0].y, 0f), Quaternion.identity);
         Destroy(grid[Mathf.RoundToInt(snake[snake.Count - 1].x), Mathf.RoundToInt(snake[snake.Count - 1].y)]);
         snake.RemoveAt(snake.Count - 1);
     }
 
-    private bool CheckCollision()
+    // 检测是否碰撞到了墙壁和自己的身体
+    private bool CheckCollision(Vector2 vec)
     {
-        Vector2 first = snake[0];
-        if (Mathf.RoundToInt(first.x) < 20 && Mathf.RoundToInt(first.x)>=0 && Mathf.RoundToInt(first.y)<10 && Mathf.RoundToInt(first.y) >=0)
+        if ((Mathf.RoundToInt(vec.x) >= w || Mathf.RoundToInt(vec.x) < 0) || (Mathf.RoundToInt(vec.y) >= h || Mathf.RoundToInt(vec.y) < 0))
         {
-            return false;
+            Debug.Log("碰到墙壁了");
+            return true;
         }
-        return true;
+        
+        foreach(Vector2 node in snake)
+        {
+            if (vec.x == node.x && vec.y == node.y)
+            {
+                Debug.Log("碰到身体了");
+                return true;
+            }
+        }
+
+        return false;
     }
 
+    // 检查是否吃到了食物
+    private void CheckFood(Vector2 vec)
+    {
+        if (vec == FoodSwapScript.foodPos)
+        {
+            EatFood(FoodSwapScript.foodPos);
+            Destroy(GameObject.FindGameObjectWithTag("food"));
+        }
+    }
+
+    // 游戏结束函数
     public void GameOver()
     {
-        Debug.Log("GameOver");
+        state = STATE.GameOver;
     }
 }
