@@ -23,9 +23,9 @@ public class FoodSwapScript : MonoBehaviour
                 for (int j = 0; j < GameManagerScript.h; ++j)
                 {
                     swapList.Add(new Vector2(i, j));
-                    foreach (Vector2 node in GameManagerScript.snake)
+                    foreach (GameManagerScript.SnakeNode node in GameManagerScript.snakeNodes)
                     {
-                        if (i == node.x && j == node.y)
+                        if (i == node.pos.x && j == node.pos.y)
                         {
                             swapList.RemoveAt(swapList.Count - 1);
                         }
