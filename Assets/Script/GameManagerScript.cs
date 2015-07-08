@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class GameManagerScript : MonoBehaviour
 {
     private float time;
+    private int initLength = 9;
 
     public static int w = 20;
     public static int h = 11;
@@ -16,6 +17,7 @@ public class GameManagerScript : MonoBehaviour
     public GameObject node;
     public enum STATE { Start, Gaming, GameOver };
     public static int score = 0;
+    public static int level = 1;
 
     public struct SnakeNode
     {
@@ -26,7 +28,7 @@ public class GameManagerScript : MonoBehaviour
 
     void Start()
     {
-        for (int i = 0; i < 9; ++i)
+        for (int i = 0; i < initLength; ++i)
         {
             EatFood();
         }
@@ -81,7 +83,18 @@ public class GameManagerScript : MonoBehaviour
         }
 
         grid[Mathf.RoundToInt(lastNode.pos.x), Mathf.RoundToInt(lastNode.pos.y)] = (GameObject)Instantiate(node, new Vector3(lastNode.pos.x, lastNode.pos.y, 0f), Quaternion.identity);
-        Debug.Log(snakeNodes.Count);
+        
+        // 计分
+        if (snakeNodes.Count > initLength)
+        {
+            score = (snakeNodes.Count - initLength) * level;
+
+            if (snakeNodes.Count == w*h)
+            {
+                score += 100;
+                GameOver();
+            }
+        }
     }
 
     // 贪吃蛇移动
