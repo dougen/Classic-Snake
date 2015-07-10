@@ -216,4 +216,9 @@ public class GameManagerScript : MonoBehaviour
         uiScript.ShowRankPanel(false);
         uiScript.ShowStartPanel(true);
     }
+
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
 }
